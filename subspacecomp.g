@@ -3,7 +3,7 @@ SubspaceComplement:=function(inc)
         src, trg, dim_s, dim_t, SRC, TRG,
         map, i, j, rep, cell, cobnd, k, x,
         cocell, pos, face, bndbnd, l, base,
-        int, len;
+        int, len, edge, original, pairs;
 
     src:=ShallowCopy(inc!.source);
     trg:=ShallowCopy(inc!.target);
@@ -46,8 +46,9 @@ SubspaceComplement:=function(inc)
                 Add(map[i+1],Length(TRG[i+1]));
                 Add(rep[i+1][inc!.mapping(i,j)],Length(TRG[i+1]));
 
-                # now to reindex the (n+1)-cells in the coboundary so that they
-                # each contain a unique copy of the deleted n-cell
+                # now to reindex the boundaries of the (n+1)-cells in the
+                # coboundary so that they each contain a unique copy of the
+                # deleted n-cell
                 if IsBound(TRG[i+2][cobnd[k]]) then
                     cocell:=TRG[i+2][cobnd[k]];
                     pos:=Positions(cocell,cell)[Length(Positions(cocell,cell))];
@@ -116,9 +117,59 @@ SubspaceComplement:=function(inc)
     od;
 
     # step 4: patch all `gaps of type 2', i.e., add cells where necessary in
-    # order to prevent ensure the boundary of the boundary is 0 in the chain
+    # order to ensure that the boundary of the boundary is 0 in the chain
     # complex
+    for i in [3..dim_t+1] do
+        for j in [1..Length(TRG[i])] do
+            if TRG[i][j]<>[] then
+                bndbnd:=TRG[i][j]*1;
+                bndbnd:=bndbnd{[2..bndbnd[1]+1]};
+                bndbnd:=List(bndbnd*1,x->TRG[i-1][x]{[2..TRG[i-1][x][1]+1]});
+                bndbnd:=Concatenation(bndbnd);
+                bndbnd:=Filtered(bndbnd,x->Length(Positions(bndbnd,x))<2);
+                if bndbnd<>[] then
+                    if i=3 and Length(bndbnd)>2 then
+                        original:=[1..TRG[i][j][1]]*0;
+                        for k in [2..TRG[i][j][1]+1] do
+                            for l in [1..Length(rep[i-1])] do
+                                if TRG[i][j][k] in rep[i-1][l] then
+                                    original[k-1]:=l;
+                                fi;
+                            od;
+                        od;
+                        pairs:=[];
+                        for k in original do
+                            for l in original do
+                                if k<>l then
+                                    int:=Intersection(
+                                        trg!.boundaries[i-1][k]{
+                                            [2..trg!.boundaries[i-1][k][1]+1]
+                                        },
+                                        trg!.boundaries[i-1][l]{
+                                            [2..trg!.boundaries[i-1][k][1]+1]
+                                        }
+                                    );
+                                    if int<>[] then
+                                        Add(
+                                            pairs,
+                                            [rep[i-1][k],rep[i-1][l]]
+                                        );
+                                    fi;
+                                fi;
+                            od;
+                        od;
+                    else
+                        Add(bndbnd,Length(bndbnd),1);
+                        Add(TRG[i-1],bndbnd);
 
+                        Add(TRG[i][j],Length(TRG[i-1]));
+                        TRG[i][j][1]:=TRG[i][j][1]+1;
+                    fi;
+                fi;
+            fi;
+        od;
+    od;
+    Print(pairs);
 
     # step 5: reindex TRG & map so that there are no empty entries in the
     # boundaries list and that map correctly yields an inclusion from SRC to TRG
