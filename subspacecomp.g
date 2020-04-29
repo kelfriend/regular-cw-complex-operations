@@ -3,9 +3,8 @@ SubspaceComplement:=function(inc)
         src, trg, dim_s, dim_t, SRC, TRG,
         map, i, j, rep, cell, cobnd, k, x,
         cocell, pos, face, bndbnd, l, base,
-        int, len, edge, bndbnd_copy, original,
-        pairs, int_1, int_2, vert_1, vert_2,
-        TRG_final, map_final, count;
+        int, len, edge, bnd, original, pairs,
+        match, TRG_final, map_final, count;
 
     src:=ShallowCopy(inc!.source);
     trg:=ShallowCopy(inc!.target);
@@ -117,65 +116,65 @@ SubspaceComplement:=function(inc)
             fi;
         od;
     od;
-# problem here, missing an edge in the 3ball example below : - (
+
     # step 4: patch all `gaps of type 2', i.e., add cells where necessary in
     # order to ensure that the boundary of the boundary is 0 in the chain
     # complex
     for i in [3..dim_t+1] do
-        for j in [1..Length(TRG[i])] do
+        for j in [1..Length(TRG[i])*1] do
             if IsBound(TRG[i][j]) then
                 if TRG[i][j]<>[] then
                     bndbnd:=TRG[i][j]*1;
                     bndbnd:=bndbnd{[2..bndbnd[1]+1]};
                     bndbnd:=List(bndbnd*1,x->TRG[i-1][x]{[2..TRG[i-1][x][1]+1]});
+                    bnd:=bndbnd*1;
                     bndbnd:=Concatenation(bndbnd);
                     bndbnd:=Filtered(bndbnd,x->Length(Positions(bndbnd,x))<2);
                     if bndbnd<>[] then
-                        bndbnd_copy:=bndbnd*1;
                         if i=3 and Length(bndbnd)>2 then
-                            original:=[1..TRG[3][j][1]]*0;
-                            for k in [2..TRG[3][j][1]+1] do
-                                for l in [1..Length(rep[2])] do
-                                    if TRG[3][j][k] in rep[2][l] then
-                                        original[k-1]:=l;
-                                    fi;
-                                od;
-                            od;
-                            original:=Filtered(original,x->x<>0);
-                            pairs:=[];
-                            for k in original do
-                                for l in original do
-                                    if k<>l then
-                                        int:=Intersection(
-                                            trg!.boundaries[2][k]{[2,3]},
-                                            trg!.boundaries[2][l]{[2,3]}
-                                        );
-                                        if int<>[] then
-                                            Add(
-                                                pairs,
-                                                [rep[2][k],rep[2][l]]
-                                            );
-                                        fi;
-                                    fi;
-                                od;
-                            od;
-                            pairs:=Set(List(pairs,Set));
-                            for k in [1..Length(pairs)] do
-                                int_1:=Intersection(pairs[k][1],TRG[3][j])[1];
-                                int_2:=Intersection(pairs[k][2],TRG[3][j])[1];
-                                int_1:=TRG[2][int_1]{[2,3]};
-                                int_2:=TRG[2][int_2]{[2,3]};
-
-                                vert_1:=Intersection(int_1,bndbnd_copy)[1];
-                                vert_2:=Intersection(int_2,bndbnd_copy)[1];
-
-                                Unbind(bndbnd_copy[Position(bndbnd_copy,vert_1)]);
-                                Unbind(bndbnd_copy[Position(bndbnd_copy,vert_2)]);
-                                
-                                Add(TRG[2],[2,vert_1,vert_2]);
-                                Add(TRG[3][j],Length(TRG[2]));
-                                TRG[3][j][1]:=TRG[3][j][1]+1;
-                            od;
+                            
+                            #original:=[];
+                            #for k in [2..TRG[3][j][1]+1] do
+                            #    for l in [1..Length(rep[2])] do
+                            #        if TRG[3][j][k] in rep[2][l] then
+                            #            Add(original,l);
+                            #        fi;
+                            #    od;
+                            #od;
+                            #pairs:=[];
+                            #for k in original do
+                            #    for l in original do
+                            #        if k<>l then
+                            #            int:=Intersection(
+                            #                trg!.boundaries[2][k]{[2,3]},
+                            #                trg!.boundaries[2][l]{[2,3]}
+                            #            );
+                            #            if int<>[] then
+                            #                Add(
+                            #                    pairs,
+                            #                    [rep[2][k],rep[2][l]]
+                            #                );
+                            #            fi;
+                            #        fi;
+                            #    od;
+                            #od;
+                            #pairs:=Set(List(pairs,Set));
+                            #for k in [1..Length(pairs)] do
+                            #    match:=List(
+                            #        pairs[k]*1,
+                            #        x->List(x,y->TRG[2][y]{[2,3]})
+                            #    );
+                            #    match:=List(
+                            #        match,
+                            #        x->List(
+                            #            x,
+                            #            y->Filtered(
+                            #                y,
+                            #                z->z in bndbnd
+                            #            )
+                            #        )
+                            #    );
+                            #od;
                         else
                             Add(bndbnd,Length(bndbnd),1);
                             Add(TRG[i-1],bndbnd);
