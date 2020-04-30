@@ -3,8 +3,8 @@ SubspaceComplement:=function(inc)
         src, trg, dim_s, dim_t, SRC, TRG,
         map, i, j, rep, cell, cobnd, k, x,
         cocell, pos, face, bndbnd, l, base,
-        int, len, edge, bnd, original, pairs,
-        match, TRG_final, map_final, count;
+        int, len, edge, bnd, increase_k,
+        TRG_final, map_final, count;
 
     src:=ShallowCopy(inc!.source);
     trg:=ShallowCopy(inc!.target);
@@ -127,54 +127,40 @@ SubspaceComplement:=function(inc)
                     bndbnd:=TRG[i][j]*1;
                     bndbnd:=bndbnd{[2..bndbnd[1]+1]};
                     bndbnd:=List(bndbnd*1,x->TRG[i-1][x]{[2..TRG[i-1][x][1]+1]});
-                    bnd:=bndbnd*1;
+                    bnd:=List(bndbnd*1,Set);
                     bndbnd:=Concatenation(bndbnd);
                     bndbnd:=Filtered(bndbnd,x->Length(Positions(bndbnd,x))<2);
                     if bndbnd<>[] then
                         if i=3 and Length(bndbnd)>2 then
-                            
-                            #original:=[];
-                            #for k in [2..TRG[3][j][1]+1] do
-                            #    for l in [1..Length(rep[2])] do
-                            #        if TRG[3][j][k] in rep[2][l] then
-                            #            Add(original,l);
-                            #        fi;
-                            #    od;
-                            #od;
-                            #pairs:=[];
-                            #for k in original do
-                            #    for l in original do
-                            #        if k<>l then
-                            #            int:=Intersection(
-                            #                trg!.boundaries[2][k]{[2,3]},
-                            #                trg!.boundaries[2][l]{[2,3]}
-                            #            );
-                            #            if int<>[] then
-                            #                Add(
-                            #                    pairs,
-                            #                    [rep[2][k],rep[2][l]]
-                            #                );
-                            #            fi;
-                            #        fi;
-                            #    od;
-                            #od;
-                            #pairs:=Set(List(pairs,Set));
-                            #for k in [1..Length(pairs)] do
-                            #    match:=List(
-                            #        pairs[k]*1,
-                            #        x->List(x,y->TRG[2][y]{[2,3]})
-                            #    );
-                            #    match:=List(
-                            #        match,
-                            #        x->List(
-                            #            x,
-                            #            y->Filtered(
-                            #                y,
-                            #                z->z in bndbnd
-                            #            )
-                            #        )
-                            #    );
-                            #od;
+                            k:=1;
+                            increase_k:={k}->(k mod Length(bndbnd))+1;
+                            repeat
+                                edge:=[];
+                                Add(edge,bndbnd[k]);
+                                k:=increase_k(k);
+
+                                while bndbnd[k]=0 do
+                                    k:=increase_k(k);
+                                od;
+                                Add(edge,bndbnd[k]);
+
+                                if not Set(edge) in bnd then
+                                    bndbnd[Position(bndbnd,edge[1])]:=0;
+                                    bndbnd[Position(bndbnd,edge[2])]:=0;
+                                    
+                                    Add(edge,2,1);
+                                    Add(TRG[2],edge);
+                                    Add(TRG[3][j],Length(TRG[2]));
+                                    TRG[3][j][1]:=TRG[3][j][1]+1;
+                                fi;
+
+                                if not Sum(bndbnd)=0 then
+                                    while bndbnd[k]=0 do
+                                        k:=increase_k(k);
+                                    od;
+                                fi;
+                            until
+                                Sum(bndbnd)=0;
                         else
                             Add(bndbnd,Length(bndbnd),1);
                             Add(TRG[i-1],bndbnd);
@@ -187,7 +173,7 @@ SubspaceComplement:=function(inc)
             fi;
         od;
     od;
-if false then
+
     # step 5: reindex TRG & map so that there are no empty entries in the
     # boundaries list and that map correctly yields an inclusion from SRC to TRG
     TRG_final:=List(TRG*1,x->[]);
@@ -217,8 +203,8 @@ if false then
             fi;
         od;
     od;
-fi;
-    return TRG;#TRG_final;
+
+    return TRG_final;
 end;
 src:=[
     List([1..4],x->[1,0]),
