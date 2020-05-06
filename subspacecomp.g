@@ -3,8 +3,8 @@ SubspaceComplement:=function(inc)
         src, trg, dim_s, dim_t, SRC, TRG,
         map, i, j, rep, cell, cobnd, k, x,
         cocell, pos, face, bndbnd, l, base,
-        int, len, edge, bnd, increase_k,
-        TRG_final, map_final, count;
+        int, len, edge, bnd, seq, increase_k,
+        k_2, TRG_final, map_final, count;
 
     src:=ShallowCopy(inc!.source);
     trg:=ShallowCopy(inc!.target);
@@ -129,38 +129,67 @@ SubspaceComplement:=function(inc)
                     bndbnd:=List(bndbnd*1,x->TRG[i-1][x]{[2..TRG[i-1][x][1]+1]});
                     bnd:=List(bndbnd*1,Set);
                     bndbnd:=Concatenation(bndbnd);
-                    bndbnd:=Filtered(bndbnd,x->Length(Positions(bndbnd,x))<2);
-                    if bndbnd<>[] then
+                    bndbnd:=Filtered(bndbnd,x->(Length(Positions(bndbnd,x)) mod 2)<>0);
+                    bndbnd:=Set(bndbnd);
+                    if bndbnd<>[] then # form a (Length(bndbnd))-gon from the edges
                         if i=3 and Length(bndbnd)>2 then
-                            k:=1;
-                            increase_k:={k}->(k mod Length(bndbnd))+1;
-                            repeat
-                                edge:=[];
-                                Add(edge,bndbnd[k]);
-                                k:=increase_k(k);
+                            seq:=[];
+                            increase_k:={k}->(k mod Length(bnd))+1;
+                            k:=bnd[
+                                Position(
+                                    Filtered(
+                                        bnd,
+                                        x->Intersection(x,bndbnd)<>[]
+                                    ),
+                                    true
+                                )
+                            ];
+                            k_2:=Position(Filtered(bnd[k],x->x in bndbnd),true);
 
-                                while bndbnd[k]=0 do
-                                    k:=increase_k(k);
-                                od;
-                                Add(edge,bndbnd[k]);
+                            Add(seq,bnd[k][k_2]);
+                            Add(seq,bnd[k][(k_2 mod 2)+1]);
+                            bnd[k]:=[0,0];
+                            k:=increase_k(k);
 
-                                if not Set(edge) in bnd then
-                                    bndbnd[Position(bndbnd,edge[1])]:=0;
-                                    bndbnd[Position(bndbnd,edge[2])]:=0;
+                            while Length(seq)<Length(Set(Concatenation(bnd))) do
+                                pos:=Position(Filtered(bnd,x->seq[Length(seq)] in x),true);
+                                if pos<>fail then
+                                    Add(seq,List(bnd[pos],x->not x in seq)[1]);
+                                    bnd[pos]:=[0,0];
+                                else
                                     
-                                    Add(edge,2,1);
-                                    Add(TRG[2],edge);
-                                    Add(TRG[3][j],Length(TRG[2]));
-                                    TRG[3][j][1]:=TRG[3][j][1]+1;
                                 fi;
+                            od;
+                            
+                        #    k:=1;
+                        #    increase_k:={k}->(k mod Length(bndbnd))+1;
+                        #    repeat
+                        #        edge:=[];
+                        #        Add(edge,bndbnd[k]);
+                        #        k:=increase_k(k);
 
-                                if not Sum(bndbnd)=0 then
-                                    while bndbnd[k]=0 do
-                                        k:=increase_k(k);
-                                    od;
-                                fi;
-                            until
-                                Sum(bndbnd)=0;
+                        #        while bndbnd[k]=0 do
+                        #            k:=increase_k(k);
+                        #        od;
+                        #        Add(edge,bndbnd[k]);
+
+                        #        if not Set(edge) in bnd then
+                        #            bndbnd[Position(bndbnd,edge[1])]:=0;
+                        #            bndbnd[Position(bndbnd,edge[2])]:=0;
+                                    
+                        #            Add(edge,2,1);
+                        #            Add(TRG[2],edge);
+                        #            Add(TRG[3][j],Length(TRG[2]));
+                        #            TRG[3][j][1]:=TRG[3][j][1]+1;
+                        #        fi;
+
+                        #        if not Sum(bndbnd)=0 then
+                        #            while bndbnd[k]=0 do
+                        #                k:=increase_k(k);
+                        #            od;
+                        #        fi;
+                        #    until
+                        #       Sum(bndbnd)=0;
                         else
                             Add(bndbnd,Length(bndbnd),1);
                             Add(TRG[i-1],bndbnd);
@@ -246,9 +275,9 @@ src2:=[
 ];
 trg2:=[
     List([1..4],x->[1,0]),
-    [ [2,1,2], [2,1,4], [2,1,4], [2,2,3], [2,2,3], [2,3,4] ],
-    [ [4,1,2,4,6], [4,1,3,5,6], [2,4,5], [2,2,3], [2,2,3] ],
-    [ [4,1,3,4,5], [4,2,3,4,5] ],
+    [ [2,1,2], [2,1,4], [2,1,4], [2,2,3], [2,2,3], [2,3,4], [2,1,4], [2,1,4], [2,2,3] ],
+    [ [4,1,2,4,6], [4,1,3,5,6], [2,4,9], [2,5,9], [2,2,7], [2,3,7], [2,2,8], [2,3,8], [4,1,7,6,9], [4,1,8,6,9] ],
+    [ [3,1,9,5], [3,2,9,6], [3,1,10,7], [3,2,10,8] ],
     []
 ];
 map2:=function(i,j)
