@@ -158,10 +158,25 @@ SubspaceComplement:=function(inc)
                                     od;
                                 fi;
                             od;
-                            cc:=Set(cc);
+                            cc:=Set(cc); # now join the ccs together to patch the 2-cell
+                            cc:=List(cc,x->Filtered(x,y->y in bndbnd));
+                            for k in [1..Length(cc)] do
+                                Add(
+                                    TRG[2],
+                                    [
+                                        2,
+                                        cc[k][2],
+                                        cc[(k mod Length(cc))+1][1]
+                                    ]
+                                );
+                                Add(map[2],Length(TRG[2]));
+                                Add(TRG[3][j],Length(TRG[2]));
+                                TRG[3][j][1]:=TRG[3][j][1]+1;
+                            od;
                         else
                             Add(bndbnd,Length(bndbnd),1);
                             Add(TRG[i-1],bndbnd);
+                            Add(map[i-1],Length(TRG[i-1]));
 
                             Add(TRG[i][j],Length(TRG[i-1]));
                             TRG[i][j][1]:=TRG[i][j][1]+1;
