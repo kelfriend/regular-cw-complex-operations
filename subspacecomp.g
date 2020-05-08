@@ -2,9 +2,9 @@ SubspaceComplement:=function(inc)
     local
         src, trg, dim_s, dim_t, SRC, TRG,
         map, i, j, rep, cell, cobnd, k, x,
-        cocell, pos, face, bndbnd, l, base,
-        int, len, edge, bnd, cc, comp,
-        TRG_final, map_final, count;
+        cocell, pos, face, bndbnd, bndbnd_src, l,
+        base, int, len, bnd, cc, comp, TRG_final,
+        map_final, count, mapping;
 
     src:=ShallowCopy(inc!.source);
     trg:=ShallowCopy(inc!.target);
@@ -12,10 +12,10 @@ SubspaceComplement:=function(inc)
     dim_s:=EvaluateProperty(src,"dimension");
     dim_t:=EvaluateProperty(trg,"dimension");
 
-    SRC:=List(src!.boundaries*1,x->[]);
+    SRC:=List([0..dim_t],x->[]);
     TRG:=List(trg!.boundaries*1,x->Concatenation(x,[[0]]));
 
-    map:=List([1..dim_s+1],x->[]);
+    map:=List([1..dim_t+1],x->[]);
 
     # step 1: delete all cells of src from trg
     for i in [0..dim_s] do
@@ -61,6 +61,8 @@ SubspaceComplement:=function(inc)
 
     # step 3: patch all `gaps of type 1', i.e., determine the boundary
     # of those cells which were added as replicated cells
+    # (try making this less efficient by adding extra cells instead of finding
+    # what could be in the boundary based on where it was replicated from)
     for i in [3..dim_t+1] do
         for j in [1..Length(TRG[i])] do
             if IsBound(TRG[i][j]) then
@@ -88,25 +90,59 @@ SubspaceComplement:=function(inc)
                                     if i=3 then
                                         len:=Length(int);
                                         if len=1 then
+                                            Add(SRC[1],[1,0]);
                                             Add(TRG[1],[1,0]);
+                                            Add(map[1],Length(TRG[1]));
+
                                             Add(int,Length(TRG[1]));
                                             Add(int,2,1);
                                             TRG[2][k]:=int*1;
+
+                                            int:=Concatenation(
+                                                [2],
+                                                List(int{[2,3]},x->Position(map[1],x))
+                                            );
+                                            SRC[2][Position(map[2],k)]:=int*1;
                                         elif len=0 then
+                                            Add(SRC[1],[1,0]);
                                             Add(TRG[1],[1,0]);
+                                            Add(map[1],Length(TRG[1]));
+
+                                            Add(SRC[1],[1,0]);
                                             Add(TRG[1],[1,0]);
-                                            TRG[2][k]:=[
+                                            Add(map[1],Length(TRG[1]));
+
+                                            int:=[
                                                 2,
                                                 Length(TRG[1])-1,
                                                 Length(TRG[1])
                                             ];
+                                            TRG[2][k]:=int*1;
+
+                                            int:=Concatenation(
+                                                [2],
+                                                List(int{[2,3]},x->Position(map[1],x))
+                                            );
+                                            SRC[2][Position(map[2],k)]:=int*1;
                                         else
                                             Add(int,2,1);
                                             TRG[2][k]:=int*1;
+
+                                            int:=Concatenation(
+                                                [2],
+                                                List(int{[2,3]},x->Position(map[1],x))
+                                            );
+                                            SRC[2][Position(map[2],k)]:=int*1;
                                         fi;
                                     else
                                         Add(int,Length(int),1);
                                         TRG[i-1][k]:=int*1;
+
+                                        int:=Concatenation(
+                                            [int[1]],
+                                            List(int{[2..Length(int)]},x->Position(map[i-2],x))
+                                        );
+                                        SRC[i-1][Position(map[i-1],k)]:=int*1;
                                     fi;
                                 fi;
                             od; 
@@ -161,25 +197,55 @@ SubspaceComplement:=function(inc)
                             cc:=Set(cc); # now join the ccs together to patch the 2-cell
                             cc:=List(cc,x->Filtered(x,y->y in bndbnd));
                             for k in [1..Length(cc)] do
-                                Add(
-                                    TRG[2],
-                                    [
-                                        2,
-                                        cc[k][2],
-                                        cc[(k mod Length(cc))+1][1]
-                                    ]
-                                );
-                                Add(map[2],Length(TRG[2]));
+                                cell:=[
+                                    2,
+                                    cc[k][2],
+                                    cc[(k mod Length(cc))+1][1]
+                                ];
+                                Add(TRG[2],cell*1);
                                 Add(TRG[3][j],Length(TRG[2]));
                                 TRG[3][j][1]:=TRG[3][j][1]+1;
+
+                                Add(map[2],Length(TRG[2]));
+                                cell:=Concatenation(
+                                    [cell[1]],
+                                    List(cell{[2..Length(cell)]},x->Position(map[1],x))
+                                );
+                                Add(SRC[2],cell*1);
                             od;
                         else
                             Add(bndbnd,Length(bndbnd),1);
-                            Add(TRG[i-1],bndbnd);
-                            Add(map[i-1],Length(TRG[i-1]));
-
+                            Add(TRG[i-1],bndbnd*1);
                             Add(TRG[i][j],Length(TRG[i-1]));
                             TRG[i][j][1]:=TRG[i][j][1]+1;
+
+                            bndbnd_src:=Concatenation(
+                                [bndbnd[1]*1],
+                                List(1*bndbnd{[2..Length(bndbnd)]},x->Position(map[i-2],x))
+                            );
+                            if fail in bndbnd_src then
+                                for k in [1..Length(Positions(bndbnd_src,fail))] do
+                                    cell:=TRG[i-2][
+                                        bndbnd[
+                                            Positions(bndbnd_src,fail)[k]
+                                        ]
+                                    ];
+                                    Add(
+                                        SRC[i-2],
+                                        Concatenation(
+                                            [cell[1]],
+                                            List(cell{[2..Length(cell)]},x->Position(map[i-3],x))
+                                        )
+                                    );
+                                    Add(map[i-2],bndbnd[Positions(bndbnd_src,fail)[k]]);
+                                od;
+                            fi;
+                            bndbnd_src:=Concatenation(
+                                [bndbnd[1]*1],
+                                List(1*bndbnd{[2..Length(bndbnd)]},x->Position(map[i-2],x))
+                            );
+                            Add(map[i-1],Length(TRG[i-1]));
+                            Add(SRC[i-1],bndbnd_src*1);
                         fi;
                     fi;
                 fi;
@@ -197,6 +263,9 @@ SubspaceComplement:=function(inc)
                 if TRG[i][j]<>[0] then
                     if i=1 then
                         Add(TRG_final[1],[1,0]);
+                        if Position(map[i],j)<>fail then
+                            Add(map_final[1],Length(TRG_final[1]));
+                        fi;
                     else
                         cell:=TRG[i][j]*1;
                         for k in [2..Length(cell)] do
@@ -211,13 +280,27 @@ SubspaceComplement:=function(inc)
                             cell[k]:=cell[k]-count;
                         od;
                         Add(TRG_final[i],cell);
+                        
+                        if j in map[i] then
+                            Add(map_final[i],Length(TRG_final));
+                        fi;
                     fi;
                 fi;
             fi;
         od;
     od;
-
-    return TRG_final;
+   
+    mapping:={i,j}->map_final[i+1][j];
+    
+    #return [SRC_final,TRG_final,map_final];
+    return Objectify(
+        HapRegularCWMap,
+        rec(
+            source:=RegularCWComplex(SRC),
+            target:=RegularCWComplex(TRG_final),
+            mapping:=mapping
+        )
+    );
 end;
 src:=[
     List([1..4],x->[1,0]),
