@@ -1,7 +1,7 @@
 SubspaceComplement:=function(inc)
     local
         src, trg, dim_s, dim_t, SRC, TRG,
-        map, i, j, rep, cell, cobnd, k, x,
+        map, Assumptions, i, j, rep, cell, cobnd, k, x,
         cocell, pos, face, bndbnd, bndbnd_src, l,
         base, int, len, bnd, cc, comp, TRG_final,
         map_final, count, mapping;
@@ -16,6 +16,19 @@ SubspaceComplement:=function(inc)
     TRG:=List(trg!.boundaries*1,x->Concatenation(x,[[0]]));
 
     map:=List([1..dim_t+1],x->[]);
+
+    Assumptions:=function(inc)
+        local bool;
+
+        bool:=EvaluateProperty(inc,"Subspace Complement");
+
+        if bool<>fail then
+            return bool;
+        else
+            
+        fi;
+        
+    end;
 
     # step 1: delete all cells of src from trg
     for i in [0..dim_s] do
@@ -242,7 +255,7 @@ SubspaceComplement:=function(inc)
                             fi;
                             bndbnd_src:=Concatenation(
                                 [bndbnd[1]*1],
-                                List(1*bndbnd{[2..Length(bndbnd)]},x->Position(map[i-2],x))
+                                List((bndbnd*1){[2..Length(bndbnd)]},x->Position(map[i-2],x))
                             );
                             Add(map[i-1],Length(TRG[i-1]));
                             Add(SRC[i-1],bndbnd_src*1);
