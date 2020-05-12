@@ -1,10 +1,10 @@
 SubspaceComplement:=function(inc)
     local
         src, trg, dim_s, dim_t, SRC, TRG,
-        map, Assumptions, i, j, rep, cell, cobnd, k, x,
+        map, i, j, rep, cell, cobnd, k, x,
         cocell, pos, face, bndbnd, bndbnd_src, l,
         base, int, len, bnd, cc, comp, TRG_final,
-        map_final, count, mapping;
+        map_final, count, mapping, Assumptions;
 
     src:=ShallowCopy(inc!.source);
     trg:=ShallowCopy(inc!.target);
@@ -16,19 +16,6 @@ SubspaceComplement:=function(inc)
     TRG:=List(trg!.boundaries*1,x->Concatenation(x,[[0]]));
 
     map:=List([1..dim_t+1],x->[]);
-
-    Assumptions:=function(inc)
-        local bool;
-
-        bool:=EvaluateProperty(inc,"Subspace Complement");
-
-        if bool<>fail then
-            return bool;
-        else
-            
-        fi;
-        
-    end;
 
     # step 1: delete all cells of src from trg
     for i in [0..dim_s] do
@@ -74,8 +61,6 @@ SubspaceComplement:=function(inc)
 
     # step 3: patch all `gaps of type 1', i.e., determine the boundary
     # of those cells which were added as replicated cells
-    # (try making this less efficient by adding extra cells instead of finding
-    # what could be in the boundary based on where it was replicated from)
     for i in [3..dim_t+1] do
         for j in [1..Length(TRG[i])] do
             if IsBound(TRG[i][j]) then
@@ -167,7 +152,7 @@ SubspaceComplement:=function(inc)
     od;
 
     # step 4: patch all `gaps of type 2', i.e., add cells where necessary in
-    # order to ensure that the boundary of the boundary is 0 in the chain
+    # order to ensure that the boundary of the boundary is null in the chain
     # complex
     for i in [3..dim_t+1] do
         for j in [1..Length(TRG[i])*1] do
@@ -236,7 +221,7 @@ SubspaceComplement:=function(inc)
                                 [bndbnd[1]*1],
                                 List(1*bndbnd{[2..Length(bndbnd)]},x->Position(map[i-2],x))
                             );
-                            if fail in bndbnd_src then
+                            if fail in bndbnd_src then # this shouldn't happen . . .
                                 for k in [1..Length(Positions(bndbnd_src,fail))] do
                                     cell:=TRG[i-2][
                                         bndbnd[
@@ -265,6 +250,32 @@ SubspaceComplement:=function(inc)
             fi;
         od;
     od;
+
+    # step 4.5: ensure that the input spaces are compatible with this algorithm
+    # and that they will result in an inclusion of regular CW-complexes
+    #Assumptions:=function()
+    #    local bool, i, j;
+
+    #    bool:=EvaluateProperty(inc,"subspace complement compatibility");
+
+    #    if bool<>fail then
+    #        return bool;
+    #    else
+    #        for i in [2..Length(TRG)] do
+    #            for j in [1..Length(TRG[i])] do
+    #                if IsBound(TRG[i][j]) then
+    #                    e_n:=TRG[i][j]*1;
+                        
+    #                fi;
+    #            od;
+    #        od;
+    #    fi;
+        
+    #end;
+
+    #if Assumptions()=false then
+    #    Error("the given complex is not compatible with this algorithm");
+    #fi;
 
     # step 5: reindex TRG & map so that there are no empty entries in the
     # boundaries list and that map correctly yields an inclusion from SRC to TRG
@@ -314,6 +325,7 @@ SubspaceComplement:=function(inc)
             mapping:=mapping
         )
     );
+
 end;
 src:=[
     List([1..4],x->[1,0]),
@@ -357,7 +369,7 @@ trg2:=[
     List([1..4],x->[1,0]),
     [ [2,1,2], [2,1,4], [2,1,4], [2,2,3], [2,2,3], [2,3,4], [2,1,4], [2,1,4], [2,2,3] ],
     [ [4,1,2,4,6], [4,1,3,5,6], [2,4,9], [2,5,9], [2,2,7], [2,3,7], [2,2,8], [2,3,8], [4,1,7,6,9], [4,1,8,6,9] ],
-    [ [3,1,9,5], [3,2,9,6], [3,1,10,7], [3,2,10,8] ],
+    [ [4,1,9,5,3], [4,2,9,6,4], [4,1,10,7,3], [4,2,10,8,4] ],
     []
 ];
 map2:=function(i,j)
