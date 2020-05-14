@@ -306,14 +306,18 @@ SubspaceComplement:=function(inc)
                         Add(TRG_final[i],cell);
                         
                         if j in map[i] then
-                            Add(map_final[i],Length(TRG_final));
+                            Add(map_final[i],Length(TRG_final[i]));
                         fi;
                     fi;
                 fi;
             fi;
         od;
     od;
-   
+
+    # step 6: adjust SRC_final so that it is the boundary of TRG with a tubular
+    # neighbourhood removed and not just the boundary of the tubular
+    # neighbourhood itself
+    
     mapping:={i,j}->map_final[i+1][j];
     
     #return [SRC_final,TRG_final,map_final];
@@ -385,5 +389,36 @@ end;
         source:=RegularCWComplex(src2),
         target:=RegularCWComplex(trg2),
         mapping:=map2
+    )
+);
+
+src3:=
+[ [ [ 1, 0 ], [ 1, 0 ], [ 1, 0 ], [ 1, 0 ], [1,0], [1,0] ], 
+  [ [ 2, 1, 3 ], [ 2, 2, 4 ], [ 2, 1, 3 ], [ 2, 2, 4 ], [ 2, 3, 2 ], 
+      [ 2, 4, 1 ], [ 2, 3, 2 ], [ 2, 4, 1 ], [2,5,6], [2,5,6], [2,5,6], [2,5,6] ], 
+  [ [ 4, 1, 2, 5, 6 ], [ 4, 3, 4, 5, 6 ], [ 4, 1, 2, 7, 8 ], 
+      [ 4, 3, 4, 7, 8 ], [2,9,11],[2,11,10],[2,9,12],[2,10,12] ], [  ] ];
+trg3:=
+[ [ [ 1, 0 ], [ 1, 0 ], [ 1, 0 ], [ 1, 0 ], [ 1, 0 ], [ 1, 0 ] ], 
+  [ [ 2, 1, 3 ], [ 2, 1, 2 ], [ 2, 1, 2 ], [ 2, 5, 2 ], [ 2, 1, 2 ], 
+      [ 2, 1, 2 ], [ 2, 4, 6 ], [ 2, 3, 5 ], [ 2, 4, 6 ], [ 2, 3, 5 ], 
+      [ 2, 4, 6 ], [ 2, 5, 4 ], [ 2, 6, 3 ], [ 2, 5, 4 ], [ 2, 6, 3 ] ], 
+  [ [ 4, 1, 2, 8, 4 ], [ 4, 1, 3, 10, 4 ], [ 2, 9, 7 ], [ 2, 11, 7 ], 
+      [ 2, 2, 5 ], [ 2, 3, 5 ], [ 2, 2, 6 ], [ 2, 3, 6 ], 
+      [ 6, 1, 5, 4, 7, 12, 13 ], [ 6, 1, 6, 4, 7, 14, 15 ], 
+      [ 4, 8, 9, 12, 13 ], [ 4, 10, 11, 12, 13 ], [ 4, 8, 9, 14, 15 ], 
+      [ 4, 10, 11, 14, 15 ] ], 
+  [ [ 5, 1, 9, 5, 3, 11 ], [ 5, 2, 9, 6, 4, 12 ], [ 5, 1, 10, 7, 3, 13 ], 
+      [ 5, 2, 10, 8, 4, 14 ] ], [  ] ];
+mp3:=
+[ [ 3, 4, 5, 6, 1, 2 ], [ 8, 9, 10, 11, 12, 13, 14, 15, 2,3,5,6 ], [ 11, 12, 13, 14 , 5,6,7,8], ];
+map3:={i,j}->mp3[i+1][j];
+
+test:=Objectify(
+    HapRegularCWMap,
+    rec(
+        source:=RegularCWComplex(src3),
+        target:=RegularCWComplex(trg3),
+        mapping:=map3
     )
 );
