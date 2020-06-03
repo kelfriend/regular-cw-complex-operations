@@ -374,7 +374,7 @@ SubspaceComplement:=function(inc)
     od;
     ############################################################################
 
-    # step 6: adjust SRC_final so that it is the boundary of TRG with a tubular
+    # step 6: adjust SRC so that it is the boundary of TRG with a tubular
     # neighbourhood removed and not just the boundary of the tubular
     # neighbourhood itself
     ext_faces:=[];
@@ -392,11 +392,42 @@ SubspaceComplement:=function(inc)
             nest[Length(nest)],
             [
                 ext_faces[i],
-                TRG_final[Length(nest)][ext_faces[i]]
+                TRG_final[Length(nest)][ext_faces[i]*1]
             ]
         );
         for j in Reversed([2..Length(nest)]) do
-            Print(nest,"\n");
+            for k in [1..Length(nest[j])] do
+                for l in [2..Length(nest[j][k][2])] do
+                    Add(
+                        nest[j-1],
+                        [
+                            nest[j][k][2][l],
+                            TRG_final[j-1][nest[j][k][2][l]*1]
+                        ]
+                    );
+                od;
+            od;
+        od;
+        for j in [1..Length(nest)] do
+            for k in [1..Length(nest[j])] do
+                if not nest[j][k][1] in map_final[j] then
+                    Add(map_final[j],nest[j][k][1]);
+                    if j>1 then
+                        Add(
+                            SRC[j],
+                            Concatenation(
+                                [nest[j][k][2][1]],
+                                List(
+                                    nest[j][k][2]{[2..nest[j][k][2][1]+1]},
+                                    x->Position(map_final[j-1],x)
+                                )
+                            )
+                        );
+                    else
+                        Add(SRC[1],[1,0]);
+                    fi;
+                fi;
+            od;
         od;
     od;
     ############################################################################
