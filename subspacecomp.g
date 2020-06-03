@@ -27,47 +27,49 @@ SubspaceComplement:=function(inc)
     Filter:=function()
         local
             bool1, map_list, i, j, k,
-            bool2, e_n_bar;
+            bool2, e_n, e_n_bar;
 
         bool1:=EvaluateProperty(inc,"subspace complement compatibility");
 
         if bool1<>fail then
             return bool1;
         else
-            inc!.properties:=[];
-            map_list:=List([1..Length(src!.boundaries)],x->[]); # evaluating inc!.mapping
+            if not IsBound(inc!.properties) then
+                inc!.properties:=[];
+            fi;
+            map_list:=List([1..Length(trg!.boundaries)],x->[]); # evaluating inc!.mapping
             for i in [1..Length(src!.boundaries)] do # for all possible inputs to save computation
                 for j in [1..Length(src!.boundaries[i])] do
                     Add(map_list[i],inc!.mapping(i-1,j));
                 od;
             od;
-            for i in [3..Length(trg!.boundaries)] do
+            for i in [3..Length(trg!.boundaries)-1] do
                 for j in [1..Length(trg!.boundaries[i])] do
                     if not j in map_list[i] then # we have a cell of X \ Y
-                        e_n_bar:=trg!.boundaries[i][j]*1; # the closure of l
-                        Remove(e_n_bar,e_n_bar[1]);
-                        if Intersection(e_n_bar,map_list[i-1])<>[] then
-                            bool2:=true;
-                        else
-                            bool2:=false;
-                        fi;
+                        e_n:=trg!.boundaries[i][j]*1;
+                        e_n:=e_n{[2..e_n[1]+1]};
+                        e_n_bar:=List([1..i-1],x->[]); # the closure of e_n
+                        
+                        for k in Reversed([1..i-1]) do
+                            for l in [2..Length(e_n)] do
+                                Add(e_n_bar[k],e_n[l]);
 
-                        for k in Reversed([2..i-2]) do
-                            if not bool2 then
-                                e_n_bar:=List(
-                                    e_n_bar,
-                                    x->trg!.boundaries[k][x]{
-                                        [2..trg!.boundaries[k][x][1]+1]
-                                    }
-                                );
-                                e_n_bar:=Concatenation(e_n_bar);
-                                e_n_bar:=Set(e_n_bar);
-
-                                if Intersection(e_n_bar,map_list[k])<>[] then
-                                    bool2:=true;
-                                else
-                                    bool2:=false;
+                                if k>1 then
+                                    e_n:=List(
+                                        e_n,
+                                        x->trg!.boundaries[k][x]{
+                                            [2..trg!.boundaries[k][x][1]+1]
+                                        }
+                                    );
+                                    e_n:=Concatenation(e_n);
                                 fi;
+                            od;
+                        od;
+                        
+                        bool2:=false;
+                        for k in [1..i-1] do
+                            if Intersection(map_list[k],e_n_bar[k])<>[] then
+                                bool2:=true;
                             fi;
                         od;
 
