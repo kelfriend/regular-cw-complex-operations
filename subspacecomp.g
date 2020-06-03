@@ -1,10 +1,11 @@
 SubspaceComplement:=function(inc)
     local
-        src, trg, dim_s, dim_t, SRC, TRG, map,
-        Filter, i, j, rep, cell, cobnd, k, x,
+        src, trg, dim_s, dim_t, SRC, TRG,
+        map, i, j, rep, cell, cobnd, k, x,
         cocell, pos, face, bndbnd, bndbnd_src, l,
         base, int, len, bnd, cc, comp, TRG_final,
-        map_final, count, mapping, ext_faces, nest;
+        map_final, Filter, count, mapping, ext_faces,
+        nest;
 
     if not IsHapRegularCWMap(inc) then
         Error("the input must be an inclusion of regular CW-complexes");
@@ -20,83 +21,6 @@ SubspaceComplement:=function(inc)
     TRG:=List(trg!.boundaries*1,x->Concatenation(x,[[0]]));
 
     map:=List([1..dim_t+1],x->[]);
-
-    # step 0: ensure that the input spaces are compatible with this algorithm.
-    # we impose that, given an inclusion of regular CW-complexes inc:Y->X,
-    # each cell e^n < X\Y has in its closure a cell of Y
-    Filter:=function()
-        local
-            bool1, map_list, i, j, k,
-            bool2, e_n, e_n_bar;
-
-        bool1:=EvaluateProperty(inc,"subspace complement compatibility");
-
-        if bool1<>fail then
-            return bool1;
-        else
-            if not IsBound(inc!.properties) then
-                inc!.properties:=[];
-            fi;
-            map_list:=List([1..Length(trg!.boundaries)],x->[]); # evaluating inc!.mapping
-            for i in [1..Length(src!.boundaries)] do # for all possible inputs to save computation
-                for j in [1..Length(src!.boundaries[i])] do
-                    Add(map_list[i],inc!.mapping(i-1,j));
-                od;
-            od;
-            for i in [3..Length(trg!.boundaries)-1] do
-                for j in [1..Length(trg!.boundaries[i])] do
-                    if not j in map_list[i] then # we have a cell of X \ Y
-                        e_n:=trg!.boundaries[i][j]*1;
-                        e_n:=e_n{[2..e_n[1]+1]};
-                        e_n_bar:=List([1..i-1],x->[]); # the closure of e_n
-                        
-                        for k in Reversed([1..i-1]) do
-                            for l in [2..Length(e_n)] do
-                                Add(e_n_bar[k],e_n[l]);
-
-                                if k>1 then
-                                    e_n:=List(
-                                        e_n,
-                                        x->trg!.boundaries[k][x]{
-                                            [2..trg!.boundaries[k][x][1]+1]
-                                        }
-                                    );
-                                    e_n:=Concatenation(e_n);
-                                fi;
-                            od;
-                        od;
-                        
-                        bool2:=false;
-                        for k in [1..i-1] do
-                            if Intersection(map_list[k],e_n_bar[k])<>[] then
-                                bool2:=true;
-                            fi;
-                        od;
-
-                        if bool2=false then
-                            Add(
-                                inc!.properties,
-                                ["subspace complement compatibility",false]
-                            );
-                            return false;
-                        fi;
-                    fi;
-                od;
-            od;
-            if bool2=true then
-                Add(
-                    inc!.properties,
-                    ["subspace complement compatibility",true]
-                );
-                return true;
-            fi;
-        fi;
-        
-    end;
-
-    #if Filter()=false then
-    #    Error("the given complexes are not compatible with this algorithm");
-    #fi;
 
     # step 1: delete all cells of src from trg
     for i in [0..dim_s] do
@@ -372,6 +296,84 @@ SubspaceComplement:=function(inc)
             fi;
         od;
     od;
+    ############################################################################
+
+    # step 5.5: to ensure that the output CW-complex is regular, we must check
+    # that each cell added to TRG/TRG_final, g(e^n), is homeomorphic to an open
+    # (n-1)-ball
+    Filter:=function()
+        local
+            bool1, map_list, i, j, k,
+            bool2, e_n, e_n_bar;
+
+        bool1:=EvaluateProperty(inc,"subspace complement compatibility");
+
+        if bool1<>fail then
+            return bool1;
+        else
+            if not IsBound(inc!.properties) then
+                inc!.properties:=[];
+            fi;
+            map_list:=List([1..Length(trg!.boundaries)],x->[]); # evaluating inc!.mapping
+            for i in [1..Length(src!.boundaries)] do # for all possible inputs to save computation
+                for j in [1..Length(src!.boundaries[i])] do
+                    Add(map_list[i],inc!.mapping(i-1,j));
+                od;
+            od;
+            for i in [3..Length(trg!.boundaries)-1] do
+                for j in [1..Length(trg!.boundaries[i])] do
+                    if not j in map_list[i] then # we have a cell of X \ Y
+                        e_n:=trg!.boundaries[i][j]*1;
+                        e_n:=e_n{[2..e_n[1]+1]};
+                        e_n_bar:=List([1..i-1],x->[]); # the closure of e_n
+                        
+                        for k in Reversed([1..i-1]) do
+                            for l in [2..Length(e_n)] do
+                                Add(e_n_bar[k],e_n[l]);
+
+                                if k>1 then
+                                    e_n:=List(
+                                        e_n,
+                                        x->trg!.boundaries[k][x]{
+                                            [2..trg!.boundaries[k][x][1]+1]
+                                        }
+                                    );
+                                    e_n:=Concatenation(e_n);
+                                fi;
+                            od;
+                        od;
+                        
+                        bool2:=false;
+                        for k in [1..i-1] do
+                            if Intersection(map_list[k],e_n_bar[k])<>[] then
+                                bool2:=true;
+                            fi;
+                        od;
+
+                        if bool2=false then
+                            Add(
+                                inc!.properties,
+                                ["subspace complement compatibility",false]
+                            );
+                            return false;
+                        fi;
+                    fi;
+                od;
+            od;
+            if bool2=true then
+                Add(
+                    inc!.properties,
+                    ["subspace complement compatibility",true]
+                );
+                return true;
+            fi;
+        fi;
+        
+    end;
+
+    #if Filter()=false then
+    #    Error("the given complexes are not compatible with this algorithm");
+    #fi;
     ############################################################################
 
     # step 6: adjust SRC so that it is the boundary of TRG with a tubular
