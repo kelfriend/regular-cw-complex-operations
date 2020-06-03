@@ -4,7 +4,7 @@ SubspaceComplement:=function(inc)
         Filter, i, j, rep, cell, cobnd, k, x,
         cocell, pos, face, bndbnd, bndbnd_src, l,
         base, int, len, bnd, cc, comp, TRG_final,
-        map_final, count, mapping;
+        map_final, count, mapping, ext_faces, nest;
 
     if not IsHapRegularCWMap(inc) then
         Error("the input must be an inclusion of regular CW-complexes");
@@ -104,6 +104,7 @@ SubspaceComplement:=function(inc)
             Unbind(TRG[i+1][inc!.mapping(i,j)]);
         od;
     od;
+    ############################################################################
 
     # step 2: replicate each deleted src cell as many times as there were
     # cells of trg \ src in its coboundary
@@ -139,6 +140,7 @@ SubspaceComplement:=function(inc)
             od;
         od;
     od;
+    ############################################################################
 
     # step 3: patch all `gaps of type 1', i.e., determine the boundary
     # of those cells which were added as replicated cells
@@ -231,6 +233,7 @@ SubspaceComplement:=function(inc)
             fi;
         od;
     od;
+    ############################################################################
 
     # step 4: patch all `gaps of type 2', i.e., add cells where necessary in
     # order to ensure that the boundary of the boundary is null in the chain
@@ -331,6 +334,7 @@ SubspaceComplement:=function(inc)
             fi;
         od;
     od;
+    ############################################################################
 
     # step 5: reindex TRG & map so that there are no empty entries in the
     # boundaries list and that map correctly yields an inclusion from SRC to TRG
@@ -368,11 +372,35 @@ SubspaceComplement:=function(inc)
             fi;
         od;
     od;
+    ############################################################################
 
     # step 6: adjust SRC_final so that it is the boundary of TRG with a tubular
     # neighbourhood removed and not just the boundary of the tubular
     # neighbourhood itself
-    
+    ext_faces:=[];
+    for i in [1..Length(TRG_final[Length(TRG_final)-1])] do
+        for j in [2..Length(TRG_final[Length(TRG_final)-1][i])] do
+            Add(ext_faces,TRG_final[Length(TRG_final)-1][i][j]);
+        od;
+    od;
+    ext_faces:=Filtered(ext_faces,x->Length(Positions(ext_faces,x))=1);
+    ext_faces:=Filtered(ext_faces,x->not x in map_final[Length(map_final)-1]);
+
+    for i in [1..Length(ext_faces)] do
+        nest:=List([1..Length(TRG_final)-2],x->[]);
+        Add(
+            nest[Length(nest)],
+            [
+                ext_faces[i],
+                TRG_final[Length(nest)][ext_faces[i]]
+            ]
+        );
+        for j in Reversed([2..Length(nest)]) do
+            Print(nest,"\n");
+        od;
+    od;
+    ############################################################################
+
     mapping:={i,j}->map_final[i+1][j];
     
     #return [SRC_final,TRG_final,map_final];
