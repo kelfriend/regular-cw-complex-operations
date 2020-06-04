@@ -447,6 +447,8 @@ SubspaceComplement:=function(inc)
     );
 
 end;
+
+# this is the first half of the arcknotcomp1s.g code for the example of the unknot
 src:=[
     List([1..4],x->[1,0]),
     [
@@ -481,6 +483,7 @@ framed_square:=Objectify(
     )
 );
 
+# this is the altered decomposition of the 3ball (see 3ball.pdf + email)
 src2:=[
     [ [1,0], [1,0] ],
     [ [2,1,2], [2,1,2] ],
@@ -509,6 +512,7 @@ end;
     )
 );
 
+# this is what 3ball should be if the algorithm works (verified)
 src3:=
 [ [ [ 1, 0 ], [ 1, 0 ], [ 1, 0 ], [ 1, 0 ], [1,0], [1,0] ], 
   [ [ 2, 1, 3 ], [ 2, 2, 4 ], [ 2, 1, 3 ], [ 2, 2, 4 ], [ 2, 3, 2 ], 
@@ -530,12 +534,51 @@ trg3:=
 mp3:=
 [ [ 3, 4, 5, 6, 1, 2 ], [ 8, 9, 10, 11, 12, 13, 14, 15, 2,3,5,6 ], [ 11, 12, 13, 14 , 5,6,7,8], ];
 map3:={i,j}->mp3[i+1][j];
-
 test:=Objectify(
     HapRegularCWMap,
     rec(
         source:=RegularCWComplex(src3),
         target:=RegularCWComplex(trg3),
         mapping:=map3
+    )
+);
+
+# this is a standard cube with a subcomplex consisting of half of the edges (see cube2.pdf)
+src4:=
+[
+    [
+        List([1..7],x->[1,0]),
+        [
+            [2,1,2],[2,2,3],[2,3,4],[2,4,5],[2,5,6],[2,6,7]
+        ],
+        [
+
+        ]
+    ]
+];
+trg4:=
+[
+    List([1..8],x->[1,0]),
+    [
+        [2,1,2],[2,1,4],[2,1,5],[2,2,3],[2,2,6],[2,3,4],[2,3,7],[2,4,8],[2,5,6],[2,5,8],[2,6,7],[2,7,8]
+    ],
+    [
+        [4,1,2,4,6],[4,2,3,8,10],[4,1,3,5,9],[4,4,5,7,11],[4,6,5,8,12],[4,9,10,11,12]
+    ],
+    [
+        [6,1,2,3,4,5,6]
+    ],
+    [
+
+    ]
+];
+mp4:=[[6,5,1,2,3,7,8],[9,3,1,4,7,12]]
+map4:={i,j}->mp4[i+1][j];
+cube:=Objectify(
+    HapRegularCWMap,
+    rec(
+        source:=RegularCWComplex(src4),
+        target:=RegularCWComplex(trg4),
+        mapping:=map4
     )
 );
