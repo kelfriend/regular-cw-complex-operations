@@ -1,7 +1,22 @@
-# inputs a (non-CW) cell complex B, an integer k>=0, and integer lists b, c > 0.
-# The function modifies the cell complex B by adding one k-cell e^k whose
-# boundary (k-1)-cells are specified by the list b, and whose coboundary
-# (k+1)-cells are specified by the list c. Thus the function modifies only the
-# lists B[k], B[k+1].
+################################################################################
+############ Input: a cell complex B, an integer k>=0 and lists of #############
+################### positive integers b and c ##################################
+################################################################################
+########### Output: the cell complex B with an added k-cell whose ##############
+################### boundary is specified by b and whose coboundary ############
+################### is specified by c ##########################################
+################################################################################
 AddCell:=function(B,k,b,c)
+    local
+        i;
+
+    Add(b,Length(b),1);
+    Add(B[k],b);
+    
+    for i in [1..Length(c)] do
+        Add(B[k+1][c[i]],Length(B[k]));
+        B[k+1][c[i]][1]:=B[k+1][c[i]][1]+1;
+    od;
+
+    return B;
 end;
