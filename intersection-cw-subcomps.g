@@ -1,4 +1,15 @@
-# inputs two CW-subcomplexes [X,S], [X,S'] and
-# returns the CW-subcomplex [X,S''] corresponding to their intersection
-IntersectionCWSubcomplexes:=function(pair)
+################################################################################
+############ Input: two CW-subcomplexes [X,S], [X,S'] ##########################
+################################################################################
+########### Output: the CW-subcomplex [X,S''] corresponding to #################
+################### their intersection #########################################
+################################################################################
+IntersectionCWSubcomplex:=function(XS_1,XS_2)
+    return [
+        ShallowCopy(XS_1[1]),
+        List(
+            [1..Length(XS_1[2])],
+            x->Intersection(XS_1[2][x],XS_2[2][x])
+        )
+    ];
 end;
