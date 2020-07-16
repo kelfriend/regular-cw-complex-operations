@@ -17,4 +17,4 @@ AddCell:=function(B,k,b,c)
         Add(B[k+2][c[i]],Length(B[k+1]));
         B[k+2][c[i]][1]:=B[k+2][c[i]][1]+1;
     od;
-end);
+end;
