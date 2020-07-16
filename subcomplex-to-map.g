@@ -9,7 +9,7 @@ CWSubcomplexToRegularCWMap:=function(YS)
 
     map:={i,j}->YS[2][i+1][j];
 
-    src:=List([1..Length(YS[2])+1],x->[]);
+    src:=List([1..Length(Filtered(YS[2],y->y<>[]))+1],x->[]);
     src[1]:=List(YS[2][1],x->[1,0]);
 
     for i in [2..Length(src)-1] do
@@ -26,7 +26,7 @@ CWSubcomplexToRegularCWMap:=function(YS)
         HapRegularCWMap,
         rec(
             source:=RegularCWComplex(src),
-            target:=RegularCWComplex(ShallowCopy(YS[1])),
+            target:=ShallowCopy(YS[1]),
             mapping:=map
         )
     );
