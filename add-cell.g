@@ -11,12 +11,10 @@ AddCell:=function(B,k,b,c)
         i;
 
     Add(b,Length(b),1);
-    Add(B[k],b);
+    Add(B[k+1],b);
     
     for i in [1..Length(c)] do
-        Add(B[k+1][c[i]],Length(B[k]));
-        B[k+1][c[i]][1]:=B[k+1][c[i]][1]+1;
+        Add(B[k+2][c[i]],Length(B[k+1]));
+        B[k+2][c[i]][1]:=B[k+2][c[i]][1]+1;
     od;
-
-    return B;
-end;
+end);
