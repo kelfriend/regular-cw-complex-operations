@@ -8,7 +8,7 @@
 ################### boundary of N(Z) ###########################################
 ################################################################################
 RegularCWComplexComplement:=function(arg...)
-    local
+        local
         f, compatible, Y, B, IsInternal, count, total, path_comp,
         i, j, clsr, int, hom_lst, bary, IsSubpathComponent,
         ext_cell_2_f_notation, f_notation_2_ext_cell,
@@ -25,7 +25,7 @@ RegularCWComplexComplement:=function(arg...)
 
     Y:=RegularCWMapToCWSubcomplex(f);
     B:=List([1..Dimension(Y[1])+1],x->[]);
-
+    
     IsInternal:=function(n,k) # is the kth n-cell of Y in Y\Z?
         if n+1>Length(Y[2]) then
             return true;
@@ -69,24 +69,28 @@ RegularCWComplexComplement:=function(arg...)
                     # if you find anything non contractible, barycentrically
                     # subdivide the problem cells and restart with optional
                     # 'true' cheat code 8-)
-                        for k in [1..Length(path_comp[i][j])] do
-                            if path_comp[i][j][k][2]<>List(path_comp[i][j][k][2],x->[]) and path_comp[i][j][k][2][2]<>[] then
-                                hom_lst:=List(
-                                    [1..Length(path_comp[i][j][k][2])-1],
-                                    x->Homology(
-                                        Source(
-                                            CWSubcomplexToRegularCWMap(
-                                                path_comp[i][j][k]
-                                            )
-                                        ),
-                                        x
-                                    )
-                                );
-                                if hom_lst<>List(hom_lst,x->[]) then
-                                    Add(bary,[i-1,j]);
-                                fi;
+                    for k in [1..Length(path_comp[i][j])] do
+                        if
+                        path_comp[i][j][k][2]<>List(path_comp[i][j][k][2],x->[])
+                        and
+                        path_comp[i][j][k][2][2]<>[]
+                        then
+                            hom_lst:=List(
+                                [1..Length(path_comp[i][j][k][2])-1],
+                                x->Homology(
+                                    Source(
+                                        CWSubcomplexToRegularCWMap(
+                                            path_comp[i][j][k]
+                                        )
+                                    ),
+                                    x
+                                )
+                            );
+                            if hom_lst<>List(hom_lst,x->[]) then
+                                Add(bary,[i-1,j]);
                             fi;
-                        od;
+                        fi;
+                    od;
                 fi;
             else
                 Add(B[i],"*"); # temporary entry to keep correct indexing
@@ -95,7 +99,17 @@ RegularCWComplexComplement:=function(arg...)
     od;
     
     for i in [1..Length(bary)] do
-        if bary[i][2] in Concatenation(List(Filtered(bary,x->x[1]=bary[i][1]+1),x->Y[1]!.boundaries[x[1]+1][x[2]])) then
+        if bary[i][2] in
+        Concatenation(
+            List(
+                Filtered(
+                    bary,
+                    x->x[1]=bary[i][1]+1
+                ),
+                x->Y[1]!.boundaries[x[1]+1][x[2]]
+            )
+        )
+        then
             Unbind(bary[i]);
         fi;
     od;
@@ -106,7 +120,7 @@ RegularCWComplexComplement:=function(arg...)
             Print("\nThe input is compatible with this algorithm.\n");
         else
             Print("\n",Length(bary)," cell(s) will be barycentrically subdivided.\n");
-            for i in [1..Length(bary)] do
+            for i in Reversed([1..Length(bary)]) do
                 f:=BarycentricallySubdivideCell(
                     f,
                     bary[i][1],
@@ -230,5 +244,5 @@ RegularCWComplexComplement:=function(arg...)
     B:=List(B,x->Filtered(x,y->y<>"*"));
     Add(B,[]);
 
-    return RegularCWComplex(B);
+    return BoundaryMap(RegularCWComplex(B));
 end;
