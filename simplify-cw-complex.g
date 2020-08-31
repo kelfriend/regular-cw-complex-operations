@@ -1,2 +1,0 @@
-SimplifyRegularCWComplex:=function()
-end;
