@@ -37,11 +37,11 @@ SubdivideCell:=function(f,n,k)
     od;
     for i in [1..Length(Y[Length(closure)])] do
         if Last(closure)[1] in
-            Y[Length(closure)][i]{[2..Y[Length(closure)][i][1]+1]} then
-                Append(Y[Length(closure)][i],plus1[Length(closure)]);
-                Unbind(Y[Length(closure)][i][1]);
-                Y[Length(closure)][i]:=Set(Y[Length(closure)][i]);
-                Add(Y[Length(closure)][i],Length(Y[Length(closure)][i]),1);
+            Y[Length(closure)+1][i]{[2..Y[Length(closure)+1][i][1]+1]} then
+                Append(Y[Length(closure)+1][i],plus1[Length(closure)]);
+                Unbind(Y[Length(closure)+1][i][1]);
+                Y[Length(closure)+1][i]:=Set(Y[Length(closure)+1][i]);
+                Add(Y[Length(closure)+1][i],Length(Y[Length(closure)+1][i]),1);
         fi;
     od;
     return CWSubcomplexToRegularCWMap(
