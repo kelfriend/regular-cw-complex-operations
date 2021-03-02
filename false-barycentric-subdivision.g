@@ -35,7 +35,7 @@ SubdivideCell:=function(f,n,k)
             fi;
         od;
     od;
-    for i in [1..Length(Y[Length(closure)])] do
+    for i in [1..Length(Y[Length(closure)+1])] do
         if Last(closure)[1] in
             Y[Length(closure)+1][i]{[2..Y[Length(closure)+1][i][1]+1]} then
                 Append(Y[Length(closure)+1][i],plus1[Length(closure)]);
